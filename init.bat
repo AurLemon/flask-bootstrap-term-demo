@@ -20,6 +20,8 @@ if not exist "venv" (
     python -m venv .venv
 )
 
+call .venv\Scripts\activate.bat
+
 :: 安装依赖
 if exist "requirements.txt" (
     echo 根据项目依赖描述文件安装依赖包...
