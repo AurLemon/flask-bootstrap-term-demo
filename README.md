@@ -24,7 +24,7 @@ Press CTRL+C to quit
  * Debugger is active!
  * Debugger PIN: 123-053-804
 ```
-打开浏览器，访问 `http://127.0.0.1:5000` 即可。如果需要停止服务，按 Ctrl+C（^C 信号）后即可终止。输入 `deactivate` 退出虚拟环境，退出后前缀 `(.venv)` 会消失。
+4. **打开浏览器。** 访问 `http://127.0.0.1:5000` 即可。如果需要停止服务，按 Ctrl+C（^C 信号）后即可终止。输入 `deactivate` 退出虚拟环境，退出后前缀 `(.venv)` 会消失。
 
 ## TODO List
 - [x] 路由
