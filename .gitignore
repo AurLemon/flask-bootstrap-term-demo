@@ -1,0 +1,43 @@
+# Python 编译文件
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.db
+*.sqlite3
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+
+# Flask 特有的
+instance/
+.webassets-cache/
+
+# VS Code 配置
+.vscode/
+
+# MacOS 系统文件
+.DS_Store
+
+# Windows 系统文件
+Thumbs.db
+
+# pytest 配置
+.cache/
+
+# Docker
+docker-compose.override.yml
+Dockerfile
+
+# JetBrains（PyCharm）配置
+.idea/
+
+# 编辑器临时文件
+*~
+
+# logs
+*.log
