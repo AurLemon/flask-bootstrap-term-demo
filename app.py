@@ -2,25 +2,28 @@ from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-@app.route("/")
-def indexView():
+def renderTemplate(page):
     return render_template(
-        "index.html",
+        page,
         bootstrap_css=url_for('static', filename='bootstrap/css/bootstrap.min.css'),
         bootstrap_js=url_for('static', filename='bootstrap/js/bootstrap.bundle.js')
     )
 
+@app.route("/")
+def indexView():
+    return renderTemplate("index.html")
+
 @app.route("/admin")
 def adminView():
-    return render_template("views/admin.html")
+    return renderTemplate("views/admin.html")
 
 @app.route("/blog")
 def blogView():
-    return render_template("views/blog.html")
+    return renderTemplate("views/blog.html")
 
 @app.route("/login")
 def loginView():
-    return render_template("views/login.html")
+    return renderTemplate("views/login.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
