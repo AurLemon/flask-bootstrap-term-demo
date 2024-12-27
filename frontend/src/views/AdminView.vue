@@ -68,7 +68,6 @@ import { ref } from 'vue'
           <tr>
             <th scope="row">3</th>
             <td><a href="https://www.baidu.com">Mark</a></td>
-            +
             <td>the Bird</td>
             <td>@twitter</td>
             <td>
