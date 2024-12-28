@@ -39,13 +39,12 @@ onMounted(() => {
                 <div v-if="newsData.image_url">
                     <img :src="newsData.image_url" alt="News Image" class="img-fluid mb-3" />
                 </div>
-                <p><strong>作者：</strong>{{ newsData.author }}</p>
-                <p><strong>发布时间：</strong>{{ newsData.publish_date }}</p>
-                <p><strong>查看次数：</strong>{{ newsData.view_count }}</p>
-                <p><strong>内容：</strong></p>
-                <p>{{ newsData.content }}</p>
-                <p><strong>详细内容：</strong></p>
-                <pre>{{ newsData.details_content }}</pre>
+                <p><strong>作者：</strong> {{ newsData.author }}</p>
+                <p><strong>发布时间：</strong> {{ newsData.publish_date }}</p>
+                <p><strong>查看次数：</strong> {{ newsData.view_count }}</p>
+                <p><strong>内容：</strong> {{ newsData.content }}</p>
+
+                <p class="details">{{ newsData.details_content }}</p>
             </div>
         </div>
 
@@ -54,3 +53,10 @@ onMounted(() => {
         </div>
     </div>
 </template>
+
+<style scoped lang="scss">
+.details {
+    font-size: 16px;
+    margin-top: 1rem;
+}
+</style>

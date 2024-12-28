@@ -9,25 +9,21 @@ const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = 10
 
-// 获取用户列表
 axios.get('/api/users').then(res => {
     userList.value = res.data.data
     filteredList.value = userList.value
 })
 
-// 计算分页后的当前显示数据
 const paginatedList = computed(() => {
     const start = (currentPage.value - 1) * pageSize
     const end = currentPage.value * pageSize
     return filteredList.value.slice(start, end)
 })
 
-// 计算总页数
 const totalPages = computed(() => {
     return Math.ceil(filteredList.value.length / pageSize)
 })
 
-// 更新搜索内容
 const updateSearch = () => {
     if (searchQuery.value.trim() === '') {
         filteredList.value = userList.value
@@ -44,7 +40,6 @@ const updateSearch = () => {
     currentPage.value = 1
 }
 
-// 切换页码
 const changePage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page
@@ -167,7 +162,7 @@ watch(searchQuery, updateSearch)
 
 <style scoped lang="scss">
 .container-inner {
-    margin: 10px 0;
+    margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
 }

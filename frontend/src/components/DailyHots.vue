@@ -15,7 +15,7 @@ axios.get('/api/news/hot')
 })
 .catch(error => {
     console.error('获取数据失败', error);
-});
+})
 </script>
 
 <template>

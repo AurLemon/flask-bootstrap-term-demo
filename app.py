@@ -3,11 +3,13 @@ from flask import Flask, jsonify, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from werkzeug.utils import secure_filename
+import uuid
 
 # 初始化 Flask 应用
 app = Flask(__name__, static_folder='static')
 
-# SQLite 数据库
+# SQLite 数据库配置
 db_dir = './database'
 if not os.path.exists(db_dir):
     os.makedirs(db_dir)
@@ -18,37 +20,58 @@ full_db_path = os.path.abspath(db_path)
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{full_db_path}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+# 配置文件上传目录
+UPLOAD_FOLDER = './upload'
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['ALLOWED_EXTENSIONS'] = set()                # 不限制文件类型
+app.config['MAX_CONTENT_LENGTH'] = None                 # 不限制大小
+
 db = SQLAlchemy(app)
 
 # 用户表模型
 class User(db.Model):
-    id = db.Column(db.String(36), primary_key=True)  # 用户ID（UUID等）
+    id = db.Column(db.String(36), primary_key=True)                                         # 用户ID（UUID等）
     first_name = db.Column(db.String(50), nullable=False)
     last_name = db.Column(db.String(50), nullable=False)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    reg_date = db.Column(db.DateTime, default=datetime.now(ZoneInfo('Asia/Shanghai')))  # 注册时间
-    password = db.Column(db.String(100), nullable=False)  # 密码
-    apply_status = db.Column(db.Integer, nullable=False)  # 申请状态
-    is_admin = db.Column(db.Boolean, default=False)  # 是否为管理员
+    reg_date = db.Column(db.DateTime, default=datetime.now(ZoneInfo('Asia/Shanghai')))      # 注册时间
+    password = db.Column(db.String(100), nullable=False)                                    # 密码
+    apply_status = db.Column(db.Integer, nullable=False)                                    # 申请状态
+    is_admin = db.Column(db.Boolean, default=False)                                         # 是否为管理员
 
     def __repr__(self):
         return f"<User {self.username}>"
 
 # 新闻表模型
 class News(db.Model):
-    id = db.Column(db.Integer, primary_key=True)  # 自动增长的ID
-    title = db.Column(db.String(200), nullable=False)  # 新闻标题
-    content = db.Column(db.Text, nullable=False)  # 新闻内容
-    author = db.Column(db.String(100), nullable=False)  # 作者
-    image_url = db.Column(db.String(200))  # 图片URL
+    id = db.Column(db.Integer, primary_key=True)                                            # 自动增长的ID
+    title = db.Column(db.String(200), nullable=False)                                       # 新闻标题
+    content = db.Column(db.Text, nullable=False)                                            # 新闻内容
+    author = db.Column(db.String(100), nullable=False)                                      # 作者
+    image_url = db.Column(db.String(200))                                                   # 图片URL
     publish_date = db.Column(db.DateTime, default=datetime.now(ZoneInfo('Asia/Shanghai')))  # 发布时间
-    is_published = db.Column(db.Boolean, default=False)  # 是否发布
-    is_deleted = db.Column(db.Boolean, default=False)  # 是否删除
-    details_content = db.Column(db.Text)  # 详细内容
-    view_count = db.Column(db.Integer, default=0)  # 查看次数
+    is_published = db.Column(db.Boolean, default=False)                                     # 是否发布
+    is_deleted = db.Column(db.Boolean, default=False)                                       # 是否删除
+    details_content = db.Column(db.Text)                                                    # 详细内容
+    view_count = db.Column(db.Integer, default=0)                                           # 查看次数
 
     def __repr__(self):
         return f"<News {self.title}>"
+
+# 文件表模型
+class File(db.Model):
+    id = db.Column(db.Integer, primary_key=True)                                            # 自动增长的ID
+    original_filename = db.Column(db.String(200), nullable=False)                           # 原始文件名
+    stored_filename = db.Column(db.String(200), nullable=False)                             # 存储的文件名（随机生成）
+    size = db.Column(db.Integer, nullable=False)                                            # 文件大小
+    file_type = db.Column(db.String(50), nullable=False)                                    # 文件类型
+    upload_date = db.Column(db.DateTime, default=datetime.now(ZoneInfo('Asia/Shanghai')))   # 上传时间
+
+    def __repr__(self):
+        return f"<File {self.original_filename}>"
 
 # 自动创建数据库和表
 def create_tables():
@@ -155,7 +178,7 @@ def get_news_by_id(id):
     if not news:
         return api_response(False, {"message": "News not found"})
     
-    formatted_publish_date = news.publish_date.strftime('%Y-%m-%d %H:%M:%S')  # 格式化日期为 'yyyymmdd hhmmss'
+    formatted_publish_date = news.publish_date.strftime('%Y-%m-%d %H:%M:%S')
     news_data = {
         "id": news.id,
         "title": news.title,
@@ -171,12 +194,100 @@ def get_news_by_id(id):
 
     return api_response(True, news_data)
 
-# 捕获所有非API请求并返回index.html
+# API：上传文件
+@app.route("/api/upload", methods=["POST"])
+def upload_file():
+    if 'file' not in request.files:
+        return api_response(False, {"message": "No file part"})
+
+    file = request.files['file']
+    
+    if file.filename == '':
+        return api_response(False, {"message": "No selected file"})
+
+    original_filename = secure_filename(file.filename)
+    
+    stored_filename = str(uuid.uuid4()) + os.path.splitext(original_filename)[-1]
+    
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], stored_filename)
+    
+    file.save(file_path)
+
+    file_size = os.path.getsize(file_path)
+    file_type = original_filename.rsplit('.', 1)[-1].lower() if '.' in original_filename else 'unknown'
+
+    new_file = File(
+        original_filename=original_filename,
+        stored_filename=stored_filename,
+        size=file_size,
+        file_type=file_type
+    )
+    db.session.add(new_file)
+    db.session.commit()
+
+    return api_response(True, {"message": "File uploaded successfully", "file_info": {
+        "original_filename": original_filename,
+        "stored_filename": stored_filename,
+        "size": file_size,
+        "file_type": file_type
+    }})
+
+# API：列出已上传文件
+@app.route("/api/upload/list", methods=["GET"])
+def list_uploaded_files():
+    files_info = []
+    
+    files = File.query.all()
+    
+    for file in files:
+        files_info.append({
+            "id": file.id,
+            "original_filename": file.original_filename,
+            "stored_filename": file.stored_filename,
+            "size": file.size,
+            "file_type": file.file_type,
+            "upload_date": file.upload_date.strftime('%Y-%m-%d %H:%M:%S')
+        })
+    
+    return api_response(True, files_info)
+
+# API：删除文件
+@app.route("/api/upload/<int:file_id>", methods=["DELETE"])
+def delete_file(file_id):
+    file_to_delete = File.query.get(file_id)
+    
+    if not file_to_delete:
+        return api_response(False, {"message": "File not found"})
+
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file_to_delete.stored_filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+
+    db.session.delete(file_to_delete)
+    db.session.commit()
+
+    return api_response(True, {"message": "File deleted successfully"})
+
+# API：文件下载
+@app.route("/upload/<stored_filename>")
+def uploaded_file(stored_filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], stored_filename)
+
+# 捕获所有非 API 请求并返回 index.html 或静态文件
 @app.route("/<path:path>")
 def catch_all(path):
-    if path.startswith("api/"):
+    if path.startswith('api/'):
         return jsonify({"message": "API response"})
+
+    static_path = os.path.join(app.root_path, 'static', path)
     
+    if os.path.exists(static_path):
+        return send_from_directory(os.path.join(app.root_path, 'static'), path)
+    
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
+
+@app.route("/", methods=["GET"])
+def index():
     return send_from_directory(os.path.join(app.root_path, 'static'), 'index.html')
 
 if __name__ == "__main__":
