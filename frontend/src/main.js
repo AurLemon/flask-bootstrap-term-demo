@@ -7,9 +7,11 @@ import router from './router'
 import './assets/styles/main.scss'
 import './assets/styles/base.scss'
 
-import './libraries/bootstrap/js/jquery.js'
+import './libraries/bootstrap/js/jquery'
 import './libraries/bootstrap/css/bootstrap.min.css'
-import './libraries/bootstrap/js/bootstrap.min.js'
+import './libraries/bootstrap/js/bootstrap.min'
+
+import 'bootstrap-icons/font/bootstrap-icons.min.css'
 
 const app = createApp(App)
 

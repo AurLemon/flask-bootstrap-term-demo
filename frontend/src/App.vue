@@ -1,24 +1,35 @@
 <script setup>
+import { useGlobalStore } from './stores/global'
 import NavComp from './components/NavComp.vue'
 import FooterComp from './components/FooterComp.vue'
+
+const globalStore = useGlobalStore()
+
+const init = (() => {
+
+})()
 </script>
 
 <template>
-  <nav class="navbar navbar-default">
     <NavComp />
-  </nav>
-  <main>
-    <div class="main-page">
-      <RouterView />
+    <div class="main-content">
+        <main>
+            <RouterView />
+        </main>
+        <FooterComp />
     </div>
-    <FooterComp />
-  </main>
 </template>
 
 <style scoped lang="scss">
-main {
-  flex: 1 0 100%;
-  display: flex;
-  flex-direction: column;
+.main-content {
+    flex: 1 0 100%;
+    display: flex;
+    flex-direction: column;
+
+    main {
+        display: flex;
+        flex-direction: column;
+        min-height: 75vh;
+    }
 }
 </style>

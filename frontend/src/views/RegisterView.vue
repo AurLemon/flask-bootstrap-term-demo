@@ -1,7 +1,7 @@
 <template>
     <div class="page">
         <div class="login-container">
-            <h2>用户登录</h2>
+            <h2>用户注册</h2>
             <form>
                 <div class="form-group">
                     <label for="role">角色</label>
@@ -46,7 +46,7 @@
                 </div>
 
                 <div class="sumbit-wrapper">
-                    <button type="submit" class="btn btn-primary">登录</button>
+                    <button type="submit" class="btn btn-primary">注册</button>
                     <div class="login-info">用户名或密码错误</div>
                 </div>
             </form>

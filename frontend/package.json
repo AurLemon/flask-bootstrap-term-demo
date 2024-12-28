@@ -1,23 +1,26 @@
 {
-  "name": "flask-bootstrap-term-demo-frontend",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@popperjs/core": "^2.11.8",
-    "pinia": "^2.3.0",
-    "sass-embedded": "^1.83.0",
-    "vue": "^3.5.13",
-    "vue-router": "^4.5.0"
-  },
-  "devDependencies": {
-    "@vitejs/plugin-vue": "^5.2.1",
-    "vite": "^6.0.5",
-    "vite-plugin-vue-devtools": "^7.6.8"
-  }
+    "name": "flask-bootstrap-term-demo-frontend",
+    "version": "1.0.0",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@popperjs/core": "^2.11.8",
+        "axios": "^1.7.9",
+        "bootstrap-icons": "^1.11.3",
+        "dayjs": "^1.11.13",
+        "pinia": "^2.3.0",
+        "sass-embedded": "^1.83.0",
+        "vue": "^3.5.13",
+        "vue-router": "^4.5.0"
+    },
+    "devDependencies": {
+        "@vitejs/plugin-vue": "^5.2.1",
+        "vite": "^6.0.5",
+        "vite-plugin-vue-devtools": "^7.6.8"
+    }
 }
