@@ -26,17 +26,17 @@ if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['ALLOWED_EXTENSIONS'] = set()                # 不限制文件类型
-app.config['MAX_CONTENT_LENGTH'] = None                 # 不限制大小
+app.config['ALLOWED_EXTENSIONS'] = set()    # 不限制文件类型
+app.config['MAX_CONTENT_LENGTH'] = None     # 不限制大小
 
 db = SQLAlchemy(app)
 
 # 用户表模型
 class User(db.Model):
     id = db.Column(db.String(36), primary_key=True)                                         # 用户ID（UUID等）
-    first_name = db.Column(db.String(50), nullable=False)
-    last_name = db.Column(db.String(50), nullable=False)
-    username = db.Column(db.String(50), unique=True, nullable=False)
+    first_name = db.Column(db.String(50), nullable=False)                                   # 名字
+    last_name = db.Column(db.String(50), nullable=False)                                    # 姓氏
+    username = db.Column(db.String(50), unique=True, nullable=False)                        # 用户名
     reg_date = db.Column(db.DateTime, default=datetime.now(ZoneInfo('Asia/Shanghai')))      # 注册时间
     password = db.Column(db.String(100), nullable=False)                                    # 密码
     apply_status = db.Column(db.Integer, nullable=False)                                    # 申请状态
