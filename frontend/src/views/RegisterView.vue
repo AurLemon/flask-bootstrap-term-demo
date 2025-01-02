@@ -62,6 +62,7 @@
 .login-container {
     margin: auto;
     padding: 20px;
+    padding-bottom: 48px;
     max-width: 480px;
 
     h2 {
