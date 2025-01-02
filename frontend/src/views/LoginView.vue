@@ -1,11 +1,58 @@
+<script setup>
+import { ref } from 'vue'
+import axios from 'axios'
+import { useRouter } from 'vue-router'
+
+const role = ref('普通用户')
+const username = ref('')
+const password = ref('')
+const code = ref('')
+const sms = ref('')
+const loginError = ref(false)
+const errorMessage = ref('')
+const captchaUrl = ref('https://via.placeholder.com/133x33?text=Captcha')
+const router = useRouter()
+
+const login = async () => {
+    try {
+        const response = await axios.post('/api/login', {
+            username: username.value,
+            password: password.value
+        })
+
+        if (response.data.status === 'success') {
+            localStorage.setItem('token', response.data.data.token)
+            loginError.value = false
+            router.push('/')
+        } else {
+            loginError.value = true
+            errorMessage.value = response.data.data.message || '登录失败'
+        }
+    } catch (error) {
+        loginError.value = true
+        errorMessage.value = '发生错误，请稍后再试'
+        console.error(error)
+    }
+}
+
+const sendSmsCode = () => {
+    alert('短信验证码已发送（此功能为界面展示，不实际发送）')
+}
+
+const refreshCaptcha = () => {
+    captchaUrl.value = 'https://via.placeholder.com/133x33?text=New+Captcha' // 刷新验证码图片
+}
+</script>
+
 <template>
     <div class="page">
         <div class="login-container">
             <h2>用户登录</h2>
-            <form>
+            <h5 class="text-center">测试账号：aurlemon / 密码：114514</h5>
+            <form @submit.prevent="login">
                 <div class="form-group">
                     <label for="role">角色</label>
-                    <select multiple class="form-control" id="role">
+                    <select v-model="role" class="form-control" id="role">
                         <option>普通用户</option>
                         <option>管理员</option>
                     </select>
@@ -13,41 +60,41 @@
 
                 <div class="form-group">
                     <label for="user">用户名</label>
-                    <input type="text" class="form-control" id="user" placeholder="请输入用户名" />
+                    <input v-model="username" type="text" class="form-control" id="user" placeholder="请输入用户名" />
                 </div>
 
                 <div class="form-group">
                     <label for="pwd">密码</label>
-                    <input type="password" class="form-control" id="pwd" placeholder="请输入密码" />
+                    <input v-model="password" type="password" class="form-control" id="pwd" placeholder="请输入密码" />
                 </div>
 
                 <div class="form-group">
                     <label for="code">验证码</label>
                     <div class="row">
                         <div class="col-xs-7">
-                            <input type="password" class="form-control" id="code" placeholder="请输入验证码" />
+                            <input v-model="code" type="text" class="form-control" id="code" placeholder="请输入验证码" />
                         </div>
                         <div class="col-xs-5">
-                            <img style="width: 133px; height: 33px" />
+                            <img :src="captchaUrl" style="width: 133px; height: 33px" @click="refreshCaptcha" />
                         </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="code">短信验证码</label>
+                    <label for="sms">短信验证码</label>
                     <div class="row">
                         <div class="col-xs-7">
-                            <input type="text" class="form-control" id="sms" placeholder="请输入短信验证码" />
+                            <input v-model="sms" type="text" class="form-control" id="sms" placeholder="请输入短信验证码" />
                         </div>
                         <div class="col-xs-5">
-                            <input type="button" class="btn btn-default btn-block" value="发送验证码" />
+                            <button type="button" class="btn btn-default btn-block" @click="sendSmsCode">发送验证码</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="sumbit-wrapper">
+                <div class="submit-wrapper">
                     <button type="submit" class="btn btn-primary">登录</button>
-                    <div class="login-info">用户名或密码错误</div>
+                    <div v-if="loginError" class="login-info">{{ errorMessage }}</div>
                 </div>
             </form>
         </div>
@@ -79,6 +126,7 @@
     .login-info {
         position: absolute;
         top: calc(100% + 0.5rem);
+        color: red;
     }
 
     .login-info {

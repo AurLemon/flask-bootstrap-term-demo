@@ -1,6 +1,8 @@
 import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
+import jwt
+from datetime import timedelta
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from werkzeug.utils import secure_filename
@@ -30,6 +32,9 @@ app.config['ALLOWED_EXTENSIONS'] = set()    # 不限制文件类型
 app.config['MAX_CONTENT_LENGTH'] = None     # 不限制大小
 
 db = SQLAlchemy(app)
+
+# 加密解密 Token 的 Secret Key
+app.config['SECRET_KEY'] = 'AURLEMON'
 
 # 用户表模型
 class User(db.Model):
@@ -73,6 +78,16 @@ class File(db.Model):
     def __repr__(self):
         return f"<File {self.original_filename}>"
 
+# Token 表模型    
+class Token(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # 用户ID
+    token = db.Column(db.String(512), unique=True, nullable=False)  # 存储的Token
+    expiration = db.Column(db.DateTime, nullable=False)  # Token过期时间
+
+    def __repr__(self):
+        return f"<Token {self.token}>"
+
 # 自动创建数据库和表
 def create_tables():
     print(" * Creating all tables...")
@@ -92,6 +107,140 @@ def api_response(is_success, data=None):
     }
     
     return jsonify(response)
+
+# 生成 Token
+def generate_token(user):
+    payload = {
+        'user_id': user.id,
+        'is_admin': user.is_admin,
+        'exp': datetime.now(ZoneInfo('Asia/Shanghai')) + timedelta(hours=1)
+    }
+    
+    token = jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
+    
+    new_token = Token(user_id=user.id, token=token, expiration=payload['exp'])
+    db.session.add(new_token)
+    db.session.commit()
+    
+    return token
+
+# 验证 Token    
+def verify_token(raw_token):
+    def get_token_from_header(raw_token):
+        if raw_token.startswith("Bearer "):
+            return raw_token[7:]
+        return raw_token
+    
+    raw_token = get_token_from_header(raw_token)
+    
+    try:
+        token_entry = db.session.query(Token).filter_by(token=raw_token).first()
+        
+        if not token_entry:
+            return {"message": "Token not found!"}, 404
+        
+        if token_entry.expiration.tzinfo is None:
+            token_entry_expiration = token_entry.expiration.replace(tzinfo=ZoneInfo('Asia/Shanghai'))
+        else:
+            token_entry_expiration = token_entry.expiration
+
+        current_time = datetime.now(ZoneInfo('Asia/Shanghai'))
+
+        if token_entry_expiration < current_time:
+            db.session.delete(token_entry)
+            db.session.commit()
+            return {"message": "Token expired", "expires": token_entry_expiration}, 401
+
+        payload = jwt.decode(raw_token, app.config['SECRET_KEY'], algorithms=['HS256'])
+        return payload
+
+    except jwt.ExpiredSignatureError:
+        return {"message": "Token expired"}, 401
+    except jwt.InvalidTokenError:
+        return {"message": "Invalid token"}, 400
+
+# API：登录
+@app.route("/api/login", methods=["POST"])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    user = User.query.filter_by(username=username).first()
+
+    if not user or user.password != password:
+        return api_response(False, {"message": "Invalid username or password"})
+
+    token = generate_token(user)
+    
+    return api_response(True, {"token": token})
+
+# API：获取用户信息
+@app.route("/api/user/info", methods=["GET"])
+def get_user_info():
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    try:
+        payload = verify_token(token)
+        
+        if not payload:
+            return api_response(False, {"message": "Invalid or expired token"})
+        
+        if isinstance(payload, dict) and 'user_id' in payload:
+            user_id = payload['user_id']
+        else:
+            raise ValueError("Invalid payload format")
+        
+        user = User.query.get(user_id)
+        
+        if not user:
+            return api_response(False, {"message": "User not found"})
+        
+        user_info = {
+            "id": user.id,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "username": user.username,
+            "reg_date": user.reg_date.strftime('%Y-%m-%d %H:%M:%S'),
+            "apply_status": user.apply_status,
+            "is_admin": user.is_admin
+        }
+        
+        return api_response(True, user_info)
+
+    except ValueError as ve:
+        return api_response(False, {"message": str(ve)})
+    except Exception as e:
+        return api_response(False, {"message": f"An error occurred: {str(e)}"})
+
+# API：更新用户密码
+@app.route("/api/user/password", methods=["PUT"])
+def change_password():
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    payload = verify_token(token)
+    
+    if not payload:
+        return api_response(False, {"message": "Invalid or expired token"})
+    
+    user = User.query.get(payload['user_id'])
+    
+    if not user:
+        return api_response(False, {"message": "User not found"})
+    
+    data = request.get_json()
+    new_password = data.get('new_password')
+
+    user.password = new_password
+    db.session.commit()
+
+    return api_response(True, {"message": "Password updated successfully"})
 
 # API：查看所有用户
 @app.route("/api/users", methods=["GET"])
@@ -115,8 +264,21 @@ def get_users():
     return api_response(True, user_data)
 
 # API：编辑用户信息
-@app.route("/api/users/<string:id>", methods=["PUT"])
+@app.route("/api/user/<string:id>", methods=["PUT"])
 def update_user(id):
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    payload = verify_token(token)
+    
+    if not payload:
+        return api_response(False, {"message": "Invalid or expired token"})
+    
+    if not payload['is_admin']:
+        return api_response(False, {"message": "Permission denied, only admins can edit users"})
+    
     user = User.query.get(id)
     
     if not user:
@@ -148,8 +310,21 @@ def update_user(id):
     }})
 
 # API：删除用户
-@app.route("/api/users/<string:id>", methods=["DELETE"])
+@app.route("/api/user/<string:id>", methods=["DELETE"])
 def delete_user(id):
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    payload = verify_token(token)
+    
+    if not payload:
+        return api_response(False, {"message": "Invalid or expired token"})
+    
+    if not payload['is_admin']:
+        return api_response(False, {"message": "Permission denied, only admins can delete users"})
+    
     user = User.query.get(id)
     
     if not user:

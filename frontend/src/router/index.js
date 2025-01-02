@@ -40,6 +40,11 @@ const router = createRouter({
             component: () => import("../views/NewsDetails.vue"),
             props: true,
         },
+        {
+            path: "/user",
+            name: "user",
+            component: () => import("../views/UserInfo.vue"),
+        }
     ],
 });
 

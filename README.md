@@ -14,6 +14,8 @@
 | 前端界面库 | Bootstrap 3 |
 
 ## 食用教程
+> Release 中的默认已配置好 Python 虚拟环境和编译好的前端静态文件，根据操作系统直接激活虚拟环境后启动服务即可。
+
 0. **克隆仓库和安装运行环境。** 使用 `git clone https://github.com/AurLemon/flask-bootstrap-term-demo.git` 从 GitHub 克隆仓库。确保安装好 Python 3 和 pip。
 
 1. **配置依赖包和虚拟环境。** 项目提供好了初始化脚本，在 Linux 下，切换到项目目录下以后，执行 `chmod +x init.sh` 赋予脚本执行权限后，继续执行 `./init.sh` 开始初始化；若在 Windows 下，双击打开 init.bat。
@@ -33,22 +35,6 @@ Press CTRL+C to quit
  * Debugger PIN: 123-053-804
 ```
 4. **打开浏览器。** 访问 `http://127.0.0.1:5000` 即可。如果需要停止服务，按 Ctrl+C（^C 信号）后即可终止。输入 `deactivate` 退出虚拟环境，退出后前缀 `(.venv)` 会消失。
-
-## 后端节点
-> 数据库中的数据是模拟的，为了网站能凑合看，仓库里面会一同上传 SQLite 文件。
-
-### 分表
-* 用户表 `user`。字段 `id` char, `first_name` char, `last_name` char, `username` char, `reg_date` timestamp, `password` char, `apply_status` int, `is_admin` bool
-* 新闻表 `news`。字段 `title` char, `content` char, `author` char, `image_url` char, `publish_date` timestamp, `is_published` bool, `is_deleted` bool, `details_contet` char, `view_count` int
-
-### 用户系统
-* 用户信息 GET `/api/user/info`
-* 修改用户信息 POST `/api/user/edit`
-* 用户列表 GET `/api/user/list`
-
-### 新闻系统
-* 新闻列表 GET `/api/news/list`
-* 热门推荐 GET `/api/news/hot`
 
 ## TODO List
 - [x] 前端界面

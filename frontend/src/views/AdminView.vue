@@ -46,42 +46,77 @@ const changePage = (page) => {
     }
 }
 
+const getToken = () => {
+    return localStorage.getItem('token');
+}
+
 const editUser = (id) => {
-    const user = userList.value.find(u => u.id === id)
+    const user = userList.value.find(u => u.id === id);
+    const token = getToken();
+    
+    if (!token) {
+        console.log('没有授权 token，无法编辑');
+        return;
+    }
+
     if (user.isEditing) {
         saveUser(id, {
             first_name: user.first_name,
             last_name: user.last_name,
             username: user.username
-        })
+        });
     } else {
-        user.isEditing = !user.isEditing
+        user.isEditing = !user.isEditing;
     }
 }
 
 const saveUser = (id, userData) => {
-    axios.put(`/api/users/${id}`, userData)
+    const token = getToken();
+    
+    if (!token) {
+        console.log('没有授权 token，无法保存');
+        return;
+    }
+
+    axios.put(`/api/user/${id}`, userData, {
+        headers: { Authorization: `Bearer ${token}` }
+    })
         .then(res => {
             if (res.data.status === 'success') {
-                const user = userList.value.find(u => u.id === id)
-                Object.assign(user, userData)
-                user.isEditing = false
+                const user = userList.value.find(u => u.id === id);
+                Object.assign(user, userData);
+                user.isEditing = false;
+            } else {
+                console.log('保存用户失败', res.data.message);
             }
         })
         .catch(err => {
-            console.error('保存用户失败', err)
-        })
+            console.error('保存用户失败', err);
+        });
 }
 
 const deleteUser = (id) => {
-    axios.delete(`/api/users/${id}`).then(res => {
-        if (res.data.status === 'success') {
-            userList.value = userList.value.filter(user => user.id !== id)
-            filteredList.value = [...userList.value]
-        }
-    }).catch(err => {
-        console.error('删除用户失败', err)
+    const token = getToken();
+    
+    if (!token) {
+        console.log('没有授权 token，无法删除');
+        return;
+    }
+
+    axios.delete(`/api/user/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
     })
+        .then(res => {
+            if (res.data.status === 'success') {
+                userList.value = userList.value.filter(user => user.id !== id);
+                filteredList.value = [...userList.value];
+            } else {
+                console.log('删除用户失败', res.data.message);
+            }
+        })
+        .catch(err => {
+            console.error('删除用户失败', err);
+        });
 }
 
 watch(searchQuery, updateSearch)
