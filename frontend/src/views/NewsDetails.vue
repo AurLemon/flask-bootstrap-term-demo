@@ -3,6 +3,8 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 
+import DailyHots from '@/components/DailyHots.vue'
+
 const route = useRoute()
 const newsId = route.params.id
 
@@ -26,31 +28,35 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="container mt-4">
-        <div v-if="errorMessage" class="alert alert-danger" role="alert">
-            {{ errorMessage }}
-        </div>
-
-        <div v-else-if="newsData" class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">{{ newsData.title }}</h3>
+    <div class="container">
+        <div class="col-md-8">
+            <div v-if="errorMessage" class="alert alert-danger" role="alert">
+                {{ errorMessage }}
             </div>
-            <div class="panel-body">
-                <div v-if="newsData.image_url">
-                    <img :src="newsData.image_url" alt="News Image" class="img-fluid mb-3" />
+
+            <div v-else-if="newsData" class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">{{ newsData.title }}</h3>
                 </div>
-                <p><strong>作者：</strong> {{ newsData.author }}</p>
-                <p><strong>发布时间：</strong> {{ newsData.publish_date }}</p>
-                <p><strong>查看次数：</strong> {{ newsData.view_count }}</p>
-                <p><strong>内容：</strong> {{ newsData.content }}</p>
+                <div class="panel-body">
+                    <div v-if="newsData.image_url">
+                        <img :src="newsData.image_url" alt="News Image" class="img-fluid mb-3" />
+                    </div>
+                    <p><strong>作者：</strong> {{ newsData.author }}</p>
+                    <p><strong>发布时间：</strong> {{ newsData.publish_date }}</p>
+                    <p><strong>查看次数：</strong> {{ newsData.view_count }}</p>
+                    <p><strong>内容：</strong> {{ newsData.content }}</p>
 
-                <p class="details">{{ newsData.details_content }}</p>
+                    <p class="details">{{ newsData.details_content }}</p>
+                </div>
+            </div>
+
+            <div v-else>
+                <p>正在加载新闻详情...</p>
             </div>
         </div>
 
-        <div v-else>
-            <p>正在加载新闻详情...</p>
-        </div>
+        <DailyHots />
     </div>
 </template>
 

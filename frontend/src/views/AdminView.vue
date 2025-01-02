@@ -47,11 +47,41 @@ const changePage = (page) => {
 }
 
 const editUser = (id) => {
-    console.log('编辑用户', id)
+    const user = userList.value.find(u => u.id === id)
+    if (user.isEditing) {
+        saveUser(id, {
+            first_name: user.first_name,
+            last_name: user.last_name,
+            username: user.username
+        })
+    } else {
+        user.isEditing = !user.isEditing
+    }
+}
+
+const saveUser = (id, userData) => {
+    axios.put(`/api/users/${id}`, userData)
+        .then(res => {
+            if (res.data.status === 'success') {
+                const user = userList.value.find(u => u.id === id)
+                Object.assign(user, userData)
+                user.isEditing = false
+            }
+        })
+        .catch(err => {
+            console.error('保存用户失败', err)
+        })
 }
 
 const deleteUser = (id) => {
-    console.log('删除用户', id)
+    axios.delete(`/api/users/${id}`).then(res => {
+        if (res.data.status === 'success') {
+            userList.value = userList.value.filter(user => user.id !== id)
+            filteredList.value = [...userList.value]
+        }
+    }).catch(err => {
+        console.error('删除用户失败', err)
+    })
 }
 
 watch(searchQuery, updateSearch)
@@ -69,12 +99,7 @@ watch(searchQuery, updateSearch)
                 <div class="search-form">
                     <form class="form-inline" @submit.prevent="updateSearch">
                         <div class="form-group">
-                            <input 
-                                v-model="searchQuery" 
-                                type="text" 
-                                class="form-control" 
-                                placeholder="请输入关键字" 
-                            />
+                            <input v-model="searchQuery" type="text" class="form-control" placeholder="请输入关键字" />
                         </div>
                         <button type="submit" class="btn btn-default">搜索</button>
                     </form>
@@ -96,12 +121,28 @@ watch(searchQuery, updateSearch)
                 <tbody>
                     <tr v-for="user in paginatedList" :key="user.id">
                         <th scope="row">{{ user.id }}</th>
-                        <td>{{ user.first_name }}</td>
-                        <td>{{ user.last_name }}</td>
-                        <td>@{{ user.username }}</td>
+                        <td>
+                            <template v-if="user.isEditing">
+                                <input v-model="user.first_name" type="text" />
+                            </template>
+                            <template v-else>{{ user.first_name }}</template>
+                        </td>
+                        <td>
+                            <template v-if="user.isEditing">
+                                <input v-model="user.last_name" type="text" />
+                            </template>
+                            <template v-else>{{ user.last_name }}</template>
+                        </td>
+                        <td>
+                            <template v-if="user.isEditing">
+                                <input v-model="user.username" type="text" />
+                            </template>
+                            <template v-else>@{{ user.username }}</template>
+                        </td>
                         <td class="split">
                             <a class="btn btn-primary btn-xs" @click="editUser(user.id)">
-                                <span class="bi bi-pen" aria-hidden="true"></span> 编辑
+                                <span class="bi bi-pen" aria-hidden="true"></span>
+                                {{ user.isEditing ? '保存' : '编辑' }}
                             </a>
                             <a class="btn btn-danger btn-xs" @click="deleteUser(user.id)">
                                 <span class="bi bi-trash" aria-hidden="true"></span> 删除
@@ -167,7 +208,8 @@ watch(searchQuery, updateSearch)
     justify-content: space-between;
 }
 
-.operation-form, .form-inline {
+.operation-form,
+.form-inline {
     display: flex;
     gap: 3px;
 }
@@ -176,5 +218,13 @@ watch(searchQuery, updateSearch)
     display: flex;
     flex-wrap: wrap;
     gap: 3px;
+}
+
+td input {
+    width: 150px;
+    padding: 2px 10px;
+    border: 1px solid #dedede;
+    border-radius: 4px;
+    outline: none;
 }
 </style>

@@ -114,6 +114,52 @@ def get_users():
 
     return api_response(True, user_data)
 
+# API：编辑用户信息
+@app.route("/api/users/<string:id>", methods=["PUT"])
+def update_user(id):
+    user = User.query.get(id)
+    
+    if not user:
+        return api_response(False, {"message": "User not found"})
+    
+    data = request.get_json()
+    
+    first_name = data.get('first_name', user.first_name)
+    last_name = data.get('last_name', user.last_name)
+    username = data.get('username', user.username)
+    apply_status = data.get('apply_status', user.apply_status)
+    is_admin = data.get('is_admin', user.is_admin)
+    
+    user.first_name = first_name
+    user.last_name = last_name
+    user.username = username
+    user.apply_status = apply_status
+    user.is_admin = is_admin
+    
+    db.session.commit()
+
+    return api_response(True, {"message": "User updated successfully", "user_info": {
+        "id": user.id,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "username": user.username,
+        "apply_status": user.apply_status,
+        "is_admin": user.is_admin
+    }})
+
+# API：删除用户
+@app.route("/api/users/<string:id>", methods=["DELETE"])
+def delete_user(id):
+    user = User.query.get(id)
+    
+    if not user:
+        return api_response(False, {"message": "User not found"})
+    
+    db.session.delete(user)
+    db.session.commit()
+
+    return api_response(True, {"message": "User deleted successfully"})
+
 # API：查看所有新闻
 @app.route("/api/news", methods=["GET"])
 def get_news():
@@ -171,18 +217,20 @@ def get_hot_news():
         "recent_release": recent_release_data
     })
 
-# API：查看新闻
 @app.route("/api/news/<int:id>", methods=["GET"])
 def get_news_by_id(id):
     news = News.query.get(id)
     if not news:
         return api_response(False, {"message": "News not found"})
     
+    author = User.query.get(news.author)
+    author_username = author.username if author else "Unknown"
+    
     formatted_publish_date = news.publish_date.strftime('%Y-%m-%d %H:%M:%S')
     news_data = {
         "id": news.id,
         "title": news.title,
-        "author": news.author,
+        "author": author_username,
         "publish_date": formatted_publish_date,
         "view_count": news.view_count,
         "content": news.content,

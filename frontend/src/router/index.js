@@ -30,11 +30,6 @@ const router = createRouter({
             component: () => import("../views/UploadView.vue"),
         },
         {
-            path: "/stat",
-            name: "stat",
-            component: () => import("../views/StatView.vue"),
-        },
-        {
             path: "/thanks",
             name: "thanks",
             component: () => import("../views/ThanksView.vue"),

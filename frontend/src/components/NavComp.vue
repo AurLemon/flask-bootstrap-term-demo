@@ -25,12 +25,9 @@ import { RouterLink, RouterView } from "vue-router"
                             <li>
                                 <RouterLink to="/upload">上传文件</RouterLink>
                             </li>
-                            <li>
-                                <RouterLink to="/thanks">鸣谢</RouterLink>
-                            </li>
                             <li role="separator" class="divider"></li>
                             <li>
-                                <RouterLink to="/stat">统计信息</RouterLink>
+                                <RouterLink to="/thanks">鸣谢</RouterLink>
                             </li>
                         </ul>
                     </li>

@@ -25,9 +25,9 @@ axios.get('/api/news/hot')
                 <span class="bi bi-fire" aria-hidden="true"></span> 24小时热门推荐
             </div>
             <div class="panel-body">
-                <RouterLink :to="`/news/${hot.id}`" v-for="hot in dailyHots" :key="hot.id">
+                <a :href="`/news/${hot.id}`" target="_self" v-for="hot in dailyHots" :key="hot.id">
                     {{ hot.title }} <span class="subtitle">({{ hot.view_count }})</span>
-                </RouterLink>
+                </a>
             </div>
         </div>
         <div class="panel panel-default">
@@ -35,9 +35,9 @@ axios.get('/api/news/hot')
                 <span class="bi bi-fire" aria-hidden="true"></span> 最新发布
             </div>
             <div class="panel-body">
-                <RouterLink :to="`/news/${release.id}`" v-for="release in recentRelease" :key="release.id">
+                <a :href="`/news/${release.id}`" target="_self" v-for="release in recentRelease" :key="release.id">
                     {{ release.title }} <span class="subtitle">({{ release.publish_date }})</span>
-                </RouterLink>
+                </a>
             </div>
         </div>
     </div>
