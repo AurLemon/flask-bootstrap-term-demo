@@ -1,3 +1,5 @@
+chcp 65001
+
 @echo off
 
 :: 检查 Python 装了没
@@ -39,3 +41,5 @@ echo ==========
 
 echo.
 echo 初始化完成 √
+
+pause
