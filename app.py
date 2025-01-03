@@ -8,6 +8,15 @@ from zoneinfo import ZoneInfo
 from werkzeug.utils import secure_filename
 import uuid
 
+"""
+    flask-bootstrap-term-demo v1
+
+    → github.com/AurLemon/flask-bootstrap-term-demo
+    → 基于 Flask + Vue + Bootstrap
+    → 因为项目规模不大就全部写一个文件里面了🤝 后端塞了个 SQLite，前后端分离的设计模式
+    → 前端有些写的比较没那么可扩展，凑合用的，就不考虑什么复用性了
+"""
+
 # 初始化 Flask 应用
 app = Flask(__name__, static_folder='static')
 

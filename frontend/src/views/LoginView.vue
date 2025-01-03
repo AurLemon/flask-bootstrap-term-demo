@@ -2,7 +2,9 @@
 import { ref } from 'vue'
 import axios from 'axios'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
 
+const userStore = useUserStore()
 const role = ref('普通用户')
 const username = ref('')
 const password = ref('')
@@ -10,7 +12,6 @@ const code = ref('')
 const sms = ref('')
 const loginError = ref(false)
 const errorMessage = ref('')
-const captchaUrl = ref('https://via.placeholder.com/133x33?text=Captcha')
 const router = useRouter()
 
 const login = async () => {
@@ -21,7 +22,18 @@ const login = async () => {
         })
 
         if (response.data.status === 'success') {
-            localStorage.setItem('token', response.data.data.token)
+            const resToken = response.data.data.token
+            localStorage.setItem('token', resToken)
+
+            const infoRes = await axios.get("/api/user/info", {
+                headers: {
+                    Authorization: `Bearer ${resToken}`
+                }
+            })
+
+            const userName = infoRes.data.data.username
+            userStore.setUsername(userName)
+            
             loginError.value = false
             router.push('/')
         } else {
@@ -34,13 +46,8 @@ const login = async () => {
         console.error(error)
     }
 }
-
 const sendSmsCode = () => {
     alert('短信验证码已发送（此功能为界面展示，不实际发送）')
-}
-
-const refreshCaptcha = () => {
-    captchaUrl.value = 'https://via.placeholder.com/133x33?text=New+Captcha' // 刷新验证码图片
 }
 </script>
 
@@ -75,7 +82,7 @@ const refreshCaptcha = () => {
                             <input v-model="code" type="text" class="form-control" id="code" placeholder="请输入验证码" />
                         </div>
                         <div class="col-xs-5">
-                            <img :src="captchaUrl" style="width: 133px; height: 33px" @click="refreshCaptcha" />
+                            <img src="@/assets/images/captcha_test_image.png" style="width: 133px; height: 33px" />
                         </div>
                     </div>
                 </div>

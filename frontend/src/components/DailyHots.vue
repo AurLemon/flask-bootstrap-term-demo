@@ -1,10 +1,7 @@
 <script setup>
 import { ref } from 'vue'
-import { useGlobalStore } from '../stores/global'
-import { RouterLink } from 'vue-router'
 import axios from 'axios'
 
-const globalStore = useGlobalStore()
 const dailyHots = ref([])
 const recentRelease = ref([])
 

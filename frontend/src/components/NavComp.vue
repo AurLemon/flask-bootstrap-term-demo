@@ -1,12 +1,17 @@
 <script setup>
-import { ref, onMounted } from "vue"
+import { onMounted } from "vue"
 import axios from "axios"
 import { RouterLink } from "vue-router"
+import { useUserStore } from '@/stores/user'
 
-const userName = ref("未登录") // 默认显示为"未登录"
-const token = localStorage.getItem("token") // 从 localStorage 获取 token
+const userStore = useUserStore()
+const token = localStorage.getItem("token")
 
-// 在组件挂载时自动检查 token 并发送请求
+const userLogout = () => {
+    userStore.setUsername("未登录")
+    localStorage.removeItem("token")
+}
+
 onMounted(async () => {
     if (token) {
         try {
@@ -17,13 +22,13 @@ onMounted(async () => {
             })
 
             if (response.data.status === "success") {
-                userName.value = response.data.data.username // 显示用户的用户名
+                userStore.setUsername(response.data.data.username)
             } else {
-                userName.value = "未登录"
+                userStore.setUsername("未登录")
             }
         } catch (error) {
             console.error("获取用户信息失败", error)
-            userName.value = "未登录"
+            userStore.setUsername("未登录")
         }
     }
 })
@@ -65,13 +70,13 @@ onMounted(async () => {
                     <li>
                         <RouterLink to="/login">登录</RouterLink>
                     </li>
-                    <li>
+                    <li class="developing">
                         <RouterLink to="/register">注册</RouterLink>
                     </li>
                     <li class="dropdown">
                         <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                             aria-expanded="false">
-                            {{ userName }} <span class="caret"></span>
+                            {{ userStore.username }} <span class="caret"></span>
                         </a>
                         <ul class="dropdown-menu">
                             <li>
@@ -84,7 +89,7 @@ onMounted(async () => {
                                 <a>重置密码</a>
                             </li>
                             <li role="separator" class="divider"></li>
-                            <li class="developing">
+                            <li @click="userLogout">
                                 <a>退出登录</a>
                             </li>
                         </ul>
@@ -100,10 +105,14 @@ onMounted(async () => {
     font-weight: bold;
 }
 
+.developing a {
+    filter: grayscale(1) opacity(0.2);
+    cursor: not-allowed;
+}
+
 .dropdown-menu {
-    .developing a {
-        filter: grayscale(1) opacity(0.2);
-        cursor: not-allowed;
+    a {
+        cursor: pointer;
     }
 }
 </style>

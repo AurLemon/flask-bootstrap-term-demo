@@ -1,13 +1,6 @@
 <script setup>
-import { useGlobalStore } from './stores/global'
 import NavComp from './components/NavComp.vue'
 import FooterComp from './components/FooterComp.vue'
-
-const globalStore = useGlobalStore()
-
-const init = (() => {
-
-})()
 </script>
 
 <template>
