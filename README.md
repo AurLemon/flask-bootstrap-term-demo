@@ -18,9 +18,9 @@
 
 0. **克隆仓库和安装运行环境。** 使用 `git clone https://github.com/AurLemon/flask-bootstrap-term-demo.git` 从 GitHub 克隆仓库。确保安装好 Python 3 和 pip。
 
-1. **配置依赖包和虚拟环境。** 项目提供好了初始化脚本，在 Linux 下，切换到项目目录下以后，执行 `chmod +x init.sh` 赋予脚本执行权限后，继续执行 `./init.sh` 开始初始化；若在 Windows 下，双击打开 init.bat。
+1. **配置依赖包和虚拟环境。** 项目提供好了初始化脚本，在 Windows 下，双击打开 init.bat，配置好环境。
 
-2. **安装成功后，根据系统环境激活虚拟环境** 。Linux 使用 `source .venv/bin/activate`；Windows 使用 `call .venv\Scripts\activate.bat`。激活成功后终端主机名前会出现 `(.venv)` 前缀。
+2. **安装成功后，根据系统环境激活虚拟环境** 。使用 `call .venv\Scripts\activate.bat`。激活成功后终端主机名前会出现 `(.venv)` 前缀。
 
 3. **在虚拟环境下启动服务。** 使用 `python app.py` 启动服务。出现以下信息代表成功：
 ```shell
@@ -40,7 +40,4 @@ Press CTRL+C to quit
 - [x] 前端界面
 - [x] 前端渲染
 - [x] 后端路由
-    - [x] Blog
-    - [x] Login
-    - [x] Admin
 - [x] 后端模拟数据
