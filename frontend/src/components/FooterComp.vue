@@ -3,11 +3,6 @@
         <div class="footer-wrapper">
             <h3 class="title">
                 联通新闻中心
-                <span class="github">
-                    <a href="https://github.com/AurLemon/flask-bootstrap-term-demo" target="_blank">
-                        <img src="../assets/images/GitHub_Logo.svg">
-                    </a>
-                </span>
             </h3>
             <div class="info">
                 <div class="name">© 2024 AurLemon (Lin Junle) Flask-Bootstrap Term Demo. All rights reserved.</div>

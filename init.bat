@@ -1,4 +1,4 @@
-@echo off
+﻿@echo off
 chcp 65001
 
 :: 检查 Node.js 是否安装
@@ -33,8 +33,6 @@ if not exist "venv" (
     python -m venv .venv
 )
 
-call .venv\Scripts\activate.bat
-
 :: 安装依赖
 if exist "requirements.txt" (
     echo 根据项目依赖描述文件安装依赖包...
@@ -46,12 +44,9 @@ if exist "requirements.txt" (
 :: 激活虚拟环境
 echo ==========
 echo.
-echo 输入 call .venv\Scripts\activate.bat 来激活虚拟环境；deactivate 退出虚拟环境。
-echo 随后输入 python app.py 即可启动服务器。
+echo 虚拟虚拟环境并启动服务...
 echo.
 echo ==========
 
-echo.
-echo 初始化完成 √
-
-set /p userInput=call .venv\Scripts\activate.bat
+call .venv\Scripts\activate.bat
+python app.py

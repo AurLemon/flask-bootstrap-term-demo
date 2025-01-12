@@ -90,12 +90,20 @@ class File(db.Model):
 # Token 表模型    
 class Token(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)  # 用户ID
-    token = db.Column(db.String(512), unique=True, nullable=False)  # 存储的Token
-    expiration = db.Column(db.DateTime, nullable=False)  # Token过期时间
+    user_id = db.Column(db.String(36), db.ForeignKey('user.id'), nullable=False)            # 用户ID
+    token = db.Column(db.String(512), unique=True, nullable=False)                          # 存储的Token
+    expiration = db.Column(db.DateTime, nullable=False)                                     # Token过期时间
 
     def __repr__(self):
         return f"<Token {self.token}>"
+    
+# TestData 表模型
+class TestData(db.Model):
+    id = db.Column(db.Integer, primary_key=True)                                            # 自动增长的主键 ID
+    content = db.Column(db.String(512), nullable=False)                                     # 数据内容，限制为 512 字符
+
+    def __repr__(self):
+        return f"<TestData {self.content}>"
 
 # 自动创建数据库和表
 def create_tables():
@@ -167,6 +175,39 @@ def verify_token(raw_token):
         return {"message": "Token expired"}, 401
     except jwt.InvalidTokenError:
         return {"message": "Invalid token"}, 400
+
+# API：查找测试数据 (GET)
+@app.route("/api/data", methods=["GET"])
+def get_test_data():
+    test_data = TestData.query.all()
+    data = [{"id": item.id, "content": item.content} for item in test_data]
+    
+    return jsonify({
+        "status": "success",
+        "data": data
+    }), 200
+
+# API：传输数据 (POST)
+@app.route("/api/data", methods=["POST"])
+def post_test_data():
+    data = request.get_json()
+    content = data.get("content")
+
+    if not content or len(content) > 512:
+        return jsonify({
+            "status": "error",
+            "message": "Invalid content: must be non-empty and <= 512 characters"
+        }), 400
+    
+    new_test_data = TestData(content=content)
+    db.session.add(new_test_data)
+    db.session.commit()
+
+    return jsonify({
+        "status": "success",
+        "message": "TestData added successfully",
+        "data": {"id": new_test_data.id, "content": new_test_data.content}
+    }), 201
 
 # API：登录
 @app.route("/api/login", methods=["POST"])
@@ -344,6 +385,94 @@ def delete_user(id):
 
     return api_response(True, {"message": "User deleted successfully"})
 
+# API：新增用户
+@app.route("/api/user/add", methods=["POST"])
+def add_user():
+    data = request.get_json()
+
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    username = data.get('username')
+    password = data.get('password')
+    apply_status = bool(data.get('apply_status', False))  # 转换为布尔值，默认 False
+    is_admin = bool(data.get('is_admin', False))          # 转换为布尔值，默认 False
+
+    if not (first_name and last_name and username and password):
+        return api_response(False, {"message": "Missing required fields: first_name, last_name, username, password"})
+
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return api_response(False, {"message": "Username already exists"})
+    
+    existing_ids = [int(user.id) for user in User.query.all() if user.id.isdigit()]
+    new_id = str(min(set(range(1, max(existing_ids) + 2)) - set(existing_ids))) if existing_ids else '1'
+
+    new_user = User(
+        id=new_id,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        password=password,
+        apply_status=apply_status,
+        is_admin=is_admin
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return api_response(True, {"message": "User added successfully", "user_info": {
+        "id": new_id,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username,
+        "apply_status": apply_status,
+        "is_admin": is_admin
+    }})
+
+# API：用户注册
+@app.route("/api/register", methods=["POST"])
+def user_register():
+    data = request.get_json()
+
+    first_name = data.get('first_name')
+    last_name = data.get('last_name')
+    username = data.get('username')
+    password = data.get('password')
+    apply_status = bool(data.get('apply_status', False))  # 转换为布尔值，默认 False
+    is_admin = bool(data.get('is_admin', False))          # 转换为布尔值，默认 False
+
+    if not (first_name and last_name and username and password):
+        return api_response(False, {"message": "Missing required fields: first_name, last_name, username, password"})
+
+    existing_user = User.query.filter_by(username=username).first()
+    if existing_user:
+        return api_response(False, {"message": "Username already exists"})
+    
+    existing_ids = [int(user.id) for user in User.query.all() if user.id.isdigit()]
+    new_id = str(min(set(range(1, max(existing_ids) + 2)) - set(existing_ids))) if existing_ids else '1'
+
+    new_user = User(
+        id=new_id,
+        first_name=first_name,
+        last_name=last_name,
+        username=username,
+        password=password,
+        apply_status=apply_status,
+        is_admin=is_admin
+    )
+
+    db.session.add(new_user)
+    db.session.commit()
+
+    return api_response(True, {"message": "User registered successfully", "user_info": {
+        "id": new_id,
+        "first_name": first_name,
+        "last_name": last_name,
+        "username": username,
+        "apply_status": apply_status,
+        "is_admin": is_admin
+    }})
+
 # API：查看所有新闻
 @app.route("/api/news", methods=["GET"])
 def get_news():
@@ -401,11 +530,15 @@ def get_hot_news():
         "recent_release": recent_release_data
     })
 
+# API：查看新闻
 @app.route("/api/news/<int:id>", methods=["GET"])
 def get_news_by_id(id):
     news = News.query.get(id)
     if not news:
         return api_response(False, {"message": "News not found"})
+    
+    news.view_count += 1
+    db.session.commit()
     
     author = User.query.get(news.author)
     author_username = author.username if author else "Unknown"
@@ -426,6 +559,86 @@ def get_news_by_id(id):
 
     return api_response(True, news_data)
 
+# API：新增新闻
+@app.route("/api/news/add", methods=["POST"])
+def add_news():
+    token = request.headers.get('Authorization')
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    user_payload = verify_token(token)
+    if not user_payload or isinstance(user_payload, tuple):
+        return api_response(False, {"message": "Invalid or expired token"})
+
+    user_id = user_payload.get("user_id")
+    if not user_id:
+        return api_response(False, {"message": "Invalid token structure"})
+    
+    user = User.query.get(user_id)
+    if not user:
+        return api_response(False, {"message": "User not found"})
+    
+    data = request.get_json()
+    title = data.get('title')
+    content = data.get('content')
+    image_url = data.get('image_url', None)                     # 图片 URL 可选
+    is_published = data.get('is_published', False)              # 默认未发布
+    details_content = data.get('details_content', None)         # 详细内容可选
+    
+    if not (title and content):
+        return api_response(False, {"message": "Missing required fields: title, content"})
+    
+    new_news = News(
+        title=title,
+        content=content,
+        author=user.id,
+        image_url=image_url,
+        is_published=is_published,
+        details_content=details_content
+    )
+    
+    db.session.add(new_news)
+    db.session.commit()
+    
+    return api_response(True, {
+        "message": "News added successfully",
+        "news_info": {
+            "id": new_news.id,
+            "title": new_news.title,
+            "content": new_news.content,
+            "author": user.username,
+            "image_url": new_news.image_url,
+            "is_published": new_news.is_published,
+            "details_content": new_news.details_content,
+            "publish_date": new_news.publish_date.strftime('%Y-%m-%d %H:%M:%S'),
+            "view_count": new_news.view_count
+        }
+    })
+
+# API：删除新闻
+@app.route("/api/news/<int:id>", methods=["DELETE"])
+def delete_news(id):
+    token = request.headers.get('Authorization')
+    
+    if not token:
+        return api_response(False, {"message": "Token is missing"})
+    
+    payload = verify_token(token)
+    if not payload:
+        return api_response(False, {"message": "Invalid or expired token"})
+    
+    if not payload.get('is_admin', False):
+        return api_response(False, {"message": "Permission denied, only admins can delete news"})
+    
+    news = News.query.get(id)
+    if not news:
+        return api_response(False, {"message": "News not found"})
+    
+    db.session.delete(news)
+    db.session.commit()
+
+    return api_response(True, {"message": "News deleted successfully"})
+
 # API：上传文件
 @app.route("/api/upload", methods=["POST"])
 def upload_file():
@@ -436,23 +649,29 @@ def upload_file():
     
     if file.filename == '':
         return api_response(False, {"message": "No selected file"})
+    
+    original_filename = file.filename
+    file_extension = os.path.splitext(original_filename)[-1].lower()
 
-    original_filename = secure_filename(file.filename)
+    if not file_extension:
+        return api_response(False, {"message": "File has no extension"})
     
-    stored_filename = str(uuid.uuid4()) + os.path.splitext(original_filename)[-1]
+    allowed_extensions = {'.png', '.jpg', '.jpeg', '.gif', '.bmp', '.pdf', '.txt', '.docx', 'xlsx'}
+    if file_extension not in allowed_extensions:
+        return api_response(False, {"message": f"File type {file_extension} is not allowed"})
     
+    stored_filename = str(uuid.uuid4()) + file_extension
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], stored_filename)
     
     file.save(file_path)
 
     file_size = os.path.getsize(file_path)
-    file_type = original_filename.rsplit('.', 1)[-1].lower() if '.' in original_filename else 'unknown'
-
+    
     new_file = File(
-        original_filename=original_filename,
+        original_filename=secure_filename(original_filename),
         stored_filename=stored_filename,
         size=file_size,
-        file_type=file_type
+        file_type=file_extension.lstrip('.')
     )
     db.session.add(new_file)
     db.session.commit()
@@ -461,7 +680,7 @@ def upload_file():
         "original_filename": original_filename,
         "stored_filename": stored_filename,
         "size": file_size,
-        "file_type": file_type
+        "file_type": file_extension.lstrip('.')
     }})
 
 # API：列出已上传文件

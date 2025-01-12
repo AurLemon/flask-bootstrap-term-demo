@@ -10,6 +10,11 @@ const router = createRouter({
             component: BlogView,
         },
         {
+            path: "/postview",
+            name: "postView",
+            component: () => import("../views/PostView.vue")
+        },
+        {
             path: "/admin",
             name: "admin",
             component: () => import("../views/AdminView.vue"),
@@ -39,6 +44,11 @@ const router = createRouter({
             name: "newsDetails",
             component: () => import("../views/NewsDetails.vue"),
             props: true,
+        },
+        {
+            path: "/news/add",
+            name: "newsAdd",
+            component: () => import("../views/AddNews.vue")
         },
         {
             path: "/user",

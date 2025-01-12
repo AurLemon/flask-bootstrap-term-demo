@@ -8,31 +8,26 @@ const mediaList = ref([])
 const currentPage = ref(1)
 const pageSize = 10
 
-// 请求新闻数据
 axios.get('/api/news').then(res => {
     mediaList.value = res.data.data
 })
 
-// 计算总页数
 const totalPages = computed(() => {
     return Math.ceil(mediaList.value.length / pageSize)
 })
 
-// 获取当前页要显示的数据
 const currentPageData = computed(() => {
     const startIndex = (currentPage.value - 1) * pageSize
     const endIndex = startIndex + pageSize
     return mediaList.value.slice(startIndex, endIndex)
 })
 
-// 下一页
 const nextPage = () => {
     if (currentPage.value < totalPages.value) {
         currentPage.value++
     }
 }
 
-// 上一页
 const prevPage = () => {
     if (currentPage.value > 1) {
         currentPage.value--
@@ -45,7 +40,6 @@ const prevPage = () => {
         <div class="container">
             <div class="row">
                 <div class="col-md-8">
-                    <!-- 新闻列表 -->
                     <div class="media" v-for="media in currentPageData" :key="media.id">
                         <div class="media-left">
                             <RouterLink :to="`/news/${ media.id }`" class="media-object-href">
@@ -57,8 +51,7 @@ const prevPage = () => {
                             {{ media.content }}（访问量：{{ media.view_count }}，发布日期：{{ media.publish_date }}）
                         </div>
                     </div>
-
-                    <!-- 分页 -->
+                    
                     <ul class="pagination">
                         <li :class="{'disabled': currentPage === 1}">
                             <a href="#" @click.prevent="prevPage" aria-label="Previous">
@@ -77,8 +70,7 @@ const prevPage = () => {
                         </li>
                     </ul>
                 </div>
-
-                <!-- 右侧推荐 -->
+                
                 <DailyHots />
             </div>
         </div>

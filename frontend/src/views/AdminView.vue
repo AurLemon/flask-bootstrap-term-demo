@@ -8,6 +8,15 @@ const filteredList = ref([])
 const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = 10
+const isAddingUser = ref(false)
+const newUser = ref({
+    first_name: '',
+    last_name: '',
+    username: '',
+    password: '',
+    apply_status: 0,
+    is_admin: false
+})
 
 axios.get('/api/users').then(res => {
     userList.value = res.data.data
@@ -50,10 +59,41 @@ const getToken = () => {
     return localStorage.getItem('token');
 }
 
+const addUser = () => {
+    const token = getToken();
+
+    if (!token) {
+        console.log('没有授权 token，无法添加');
+        return;
+    }
+
+    axios.post('/api/user/add', newUser.value, {
+        headers: { Authorization: `Bearer ${token}` }
+    }).then(res => {
+        if (res.data.status === 'success') {
+            userList.value.push(res.data.data.user_info)
+            filteredList.value = [...userList.value]
+            isAddingUser.value = false
+            newUser.value = {
+                first_name: '',
+                last_name: '',
+                username: '',
+                password: '',
+                apply_status: 0,
+                is_admin: false
+            }
+        } else {
+            console.log('添加用户失败', res.data.message)
+        }
+    }).catch(err => {
+        console.error('添加用户失败', err)
+    })
+}
+
 const editUser = (id) => {
     const user = userList.value.find(u => u.id === id);
     const token = getToken();
-    
+
     if (!token) {
         console.log('没有授权 token，无法编辑');
         return;
@@ -72,7 +112,7 @@ const editUser = (id) => {
 
 const saveUser = (id, userData) => {
     const token = getToken();
-    
+
     if (!token) {
         console.log('没有授权 token，无法保存');
         return;
@@ -97,7 +137,7 @@ const saveUser = (id, userData) => {
 
 const deleteUser = (id) => {
     const token = getToken();
-    
+
     if (!token) {
         console.log('没有授权 token，无法删除');
         return;
@@ -126,20 +166,86 @@ watch(searchQuery, updateSearch)
     <div class="page">
         <div class="container">
             <div class="container-inner">
-                <div class="operation-form">
-                    <a href="https://www.baidu.com" class="btn btn-success">新建</a>
-                    <a href="https://www.baidu.com" class="btn btn-info">批量导入</a>
-                    <a href="https://www.baidu.com" class="btn btn-warning">导出</a>
+                <div class="operation-form mb-3">
+                    <a @click="isAddingUser = true" class="btn btn-success">新建</a>
                 </div>
                 <div class="search-form">
-                    <form class="form-inline" @submit.prevent="updateSearch">
-                        <div class="form-group">
-                            <input v-model="searchQuery" type="text" class="form-control" placeholder="请输入关键字" />
-                        </div>
+                    <form class="form-inline d-flex" @submit.prevent="updateSearch">
+                        <input v-model="searchQuery" type="text" class="form-control me-2" placeholder="请输入关键字" />
                         <button type="submit" class="btn btn-default">搜索</button>
                     </form>
                 </div>
+                <div v-if="isAddingUser" class="add-user-form mb-3">
+                    <h3 class="mb-4">新增用户</h3>
+                    <form @submit.prevent="addUser" class="needs-validation">
+                        <div class="row g-3">
+                            <!-- 名字 -->
+                            <div class="col-md-6">
+                                <label for="first_name" class="form-label">名字</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input id="first_name" v-model="newUser.first_name" type="text" class="form-control"
+                                        placeholder="请输入名字" required />
+                                </div>
+                            </div>
+                            <!-- 姓氏 -->
+                            <div class="col-md-6">
+                                <label for="last_name" class="form-label">姓氏</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person"></i></span>
+                                    <input id="last_name" v-model="newUser.last_name" type="text" class="form-control"
+                                        placeholder="请输入姓氏" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-3">
+                            <!-- 用户名 -->
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">用户名</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-person-circle"></i></span>
+                                    <input id="username" v-model="newUser.username" type="text" class="form-control"
+                                        placeholder="请输入用户名" required />
+                                </div>
+                            </div>
+                            <!-- 密码 -->
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">密码</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input id="password" v-model="newUser.password" type="password" class="form-control"
+                                        placeholder="请输入密码" required />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-3 mt-3 end">
+                            <!-- 申请状态 -->
+                            <div class="col-md-6">
+                                <label for="apply_status" class="form-label">申请状态</label>
+                                <select id="apply_status" v-model="newUser.apply_status" class="form-select">
+                                    <option value="0">未申请</option>
+                                    <option value="1">已申请</option>
+                                </select>
+                            </div>
+                            <!-- 是否为管理员 -->
+                            <div class="col-md-6">
+                                <label class="form-label d-block">是否为管理员</label>
+                                <div class="form-check">
+                                    <input id="is_admin" v-model="newUser.is_admin" type="checkbox"
+                                        class="form-check-input" />
+                                    <label for="is_admin" class="form-check-label">是</label>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- 按钮 -->
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary me-2">提交</button>
+                            <button type="button" @click="isAddingUser = false" class="btn btn-secondary">取消</button>
+                        </div>
+                    </form>
+                </div>
             </div>
+
         </div>
 
         <div class="container" data-example-id="bordered-table">
@@ -205,10 +311,10 @@ watch(searchQuery, updateSearch)
                             </thead>
                             <tbody v-if="userList && userList.length > 0">
                                 <tr v-for="user in userList" :key="user.id">
-                                    <th scope="row" v-if="user.apply_status === 'true'">{{ user.id }}</th>
-                                    <td v-if="user.apply_status === 'true'">{{ user.first_name }}</td>
-                                    <td v-if="user.apply_status === 'true'">{{ user.last_name }}</td>
-                                    <td v-if="user.apply_status === 'true'">@{{ user.username }}</td>
+                                    <th scope="row" v-if="user.apply_status == 1">{{ user.id }}</th>
+                                    <td v-if="user.apply_status == 1">{{ user.first_name }}</td>
+                                    <td v-if="user.apply_status == 1">{{ user.last_name }}</td>
+                                    <td v-if="user.apply_status == 1">@{{ user.username }}</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -235,12 +341,54 @@ watch(searchQuery, updateSearch)
     </div>
 </template>
 
-
 <style scoped lang="scss">
 .container-inner {
     margin-bottom: 10px;
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    .add-user-form {
+        flex: 1 1 100%;
+        padding: 20px;
+        margin-top: 20px;
+        background: #f7f7f7;
+        border-radius: 16px;
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .end {
+            margin-top: 10px;
+
+            & > .col-md-6 {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+
+                .form-label, .form-check-label {
+                    margin: 0;
+                }
+            }
+        }
+
+        .row.g-3 > .col-md-6 {
+            margin-top: 10px;
+        }
+
+        h3 {
+            margin: 0;
+        }
+
+        .mt-4 {
+            margin-top: 12px;
+        }
+    }
 }
 
 .operation-form,
